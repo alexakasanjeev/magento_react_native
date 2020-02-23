@@ -2,16 +2,15 @@ import {
   MAGENTO,
 } from '../../constants';
 import Status from '../../magento/Status';
-import { getPriceFromChildren } from '../../utils/products';
 
-const initialState = {
+export const INITIAL_STATE = {
   status: Status.DEFAULT,
   slider: [],
   featuredProducts: {},
   extra: {},
 };
 
-export default (state = initialState, { type, payload }) => {
+export default (state = INITIAL_STATE, { type, payload }) => {
   switch (type) {
     case MAGENTO.HOME_DATA_LOADING:
       return {
@@ -32,7 +31,7 @@ export default (state = initialState, { type, payload }) => {
         ...payload,
       };
     case MAGENTO.FEATURED_CATEGORY_PRODUCTS_LOADING: {
-      const { categoryId } = payload.categoryId;
+      const { categoryId } = payload;
       const featuredCategory = { ...state[categoryId], status: Status.LOADING };
 
       return {
@@ -48,7 +47,7 @@ export default (state = initialState, { type, payload }) => {
         [categoryId]: featuredCategory,
       };
     }
-    case MAGENTO.FEATURED_CATEGORY_PRODUCTS_ERROR: {
+    case MAGENTO.FEATURED_CATEGORY_PRODUCTS_FAILURE: {
       const { categoryId, errorMessage } = payload;
       const featuredCategory = { ...state[categoryId], status: Status.ERROR, errorMessage };
 
@@ -58,12 +57,12 @@ export default (state = initialState, { type, payload }) => {
       };
     }
     case MAGENTO.HOME_UPDATE_CONF_PRODUCT_SUCCESS: {
-      const { sku, children } = payload;
+      const { sku, children, price } = payload;
       const extra = {
         ...state.extra,
         [sku]: {
+          price,
           children,
-          price: getPriceFromChildren(children)
         },
       };
       return {

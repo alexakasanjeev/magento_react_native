@@ -1,9 +1,8 @@
 import { takeLatest, takeEvery, call, put } from 'redux-saga/effects';
-
 import { magento } from '../../magento';
-
 import { MAGENTO } from '../../constants';
 import { formatHomeData } from '../../utils/home';
+import { getPriceFromChildren } from '../../utils/products';
 
 // worker saga: Add Description
 function* getHomeData() {
@@ -33,7 +32,6 @@ function* getFeaturedCategoryProducts({ payload }) {
       type: MAGENTO.FEATURED_CATEGORY_PRODUCTS_LOADING,
       payload: {
         categoryId,
-        loading: true,
       }
     });
     const products = yield call({ context: magento, fn: magento.admin.getCategoryProducts }, categoryId, 1, undefined, 20);
@@ -45,7 +43,7 @@ function* getFeaturedCategoryProducts({ payload }) {
       }
     });
   } catch (error) {
-    yield put({ type: MAGENTO.FEATURED_CATEGORY_PRODUCTS_ERROR, payload: { categoryId: payload, errorMessage: error.message } });
+    yield put({ type: MAGENTO.FEATURED_CATEGORY_PRODUCTS_FAILURE, payload: { categoryId: payload, errorMessage: error.message } });
   }
 }
 
@@ -59,16 +57,16 @@ function* updateConfigurableProductsPrice({ payload }) {
       payload: {
         sku,
         children,
+        price: getPriceFromChildren(children),
       }
     });
   } catch (error) {
-    yield put({ type: MAGENTO.HOME_UPDATE_CONF_PRODUCT_ERROR, payload: { sku, errorMessage: error.message } });
+    yield put({ type: MAGENTO.HOME_UPDATE_CONF_PRODUCT_FAILURE, payload: { sku, errorMessage: error.message } });
   }
 }
 
 // watcher saga: watches for actions dispatched to the store, starts worker saga
 export default function* watcherSaga() {
-
   yield takeLatest(MAGENTO.HOME_DATA_REQUEST, getHomeData);
   yield takeEvery(MAGENTO.FEATURED_CATEGORY_PRODUCTS_REQUEST, getFeaturedCategoryProducts);
   yield takeEvery(MAGENTO.HOME_UPDATE_CONF_PRODUCT_REQUEST, updateConfigurableProductsPrice);
